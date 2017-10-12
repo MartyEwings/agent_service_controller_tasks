@@ -1,0 +1,12 @@
+{
+  "puppet_task_version": 1,
+  "supports_noop": false,
+  "description": "Disables the puppet service in windows",
+  "input_method": "powershell",
+  "parameters": {
+  "reason": {
+         "description": "A quick note as to the reason the service was disabled",
+         "type": "String"
+}  
+}
+}
