@@ -1,8 +1,8 @@
 {
-  "name": "martinewings-agent_service_controller_tasks",
+  "name": "martyewings-agent_service_controller_tasks",
   "version": "0.1.0",
-  "author": "martinewings",
-  "summary": "Contains Tasks Which allow the user to enable/disable and request the enablement status of the puppet agent service",
+  "author": "martynewings",
+  "summary": "Contains Tasks Which allow the user to enable/disable  the puppet agent service",
   "license": "Apache-2.0",
   "source": "",
   "dependencies": [

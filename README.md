@@ -1,14 +1,6 @@
 
 # agent_service_controller_tasks
 
-Welcome to your new module. A short overview of the generated parts can be found in the PDK documentation at https://docs.puppet.com/pdk/1.0/pdk_generating_modules.html#module-contents .
-
-Below you'll find the default README template ready for some content.
-
-
-
-
-
 
 
 #### Table of Contents
@@ -25,35 +17,25 @@ Below you'll find the default README template ready for some content.
 
 ## Description
 
-Start with a one- or two-sentence summary of what the module does and/or what problem it solves. This is your 30-second elevator pitch for your module. Consider including OS/Puppet version it works with.       
+This Module Provides Tasks for controlling the puppet agent service on Windows and Linux
 
-You can give more descriptive information in a second paragraph. This paragraph should answer the questions: "What does this module *do*?" and "Why would I use it?" If your module has a range of functionality (installation, configuration, management, etc.), this is the time to mention it.
+
+The Tasks allow you to disable the service, with a comment, and to enable it again at a later date
 
 ## Setup
 
-### What agent_service_controller_tasks affects **OPTIONAL**
+## Beginning with agent_service_controller_tasks
 
-If it's obvious what your module touches, you can skip this section. For example, folks can probably figure out that your mysql_instance module affects their MySQL instances.
-
-If there's more that they should know about, though, this is the place to mention:
-
-* Files, packages, services, or operations that the module will alter, impact, or execute.
-* Dependencies that your module automatically installs.
-* Warnings or other important notices.
-
-### Setup Requirements **OPTIONAL**
-
-If your module requires anything extra before setting up (pluginsync enabled, another module, etc.), mention it here. 
-  
-If your most recent release breaks compatibility or requires particular steps for upgrading, you might want to include an additional "Upgrading" section here.
-
-### Beginning with agent_service_controller_tasks  
-
-The very basic steps needed for a user to get the module up and running. This can include setup steps, if necessary, or it can be an example of the most basic use of the module.
+Installing this module will populate the tasks available in the PE Console
 
 ## Usage
 
-This section is where you describe how to customize, configure, and do the fancy stuff with your module here. It's especially helpful if you include usage examples and code samples for doing things with your module.
+For Windows node select the windows version of the tasks, for Linux select bash.
+
+disable will accept a description string as to why the service was disabled
+enable will reenable the service
+
+These tasks produce no output
 
 ## Reference
 
@@ -70,12 +52,6 @@ Users need a complete list of your module's classes, types, defined types provid
 
 ## Limitations
 
-This is where you list OS compatibility, version compatibility, etc. If there are Known Issues, you might want to include them under their own heading here.
+Limited to OS's with a bash shell or powershell available
 
 ## Development
-
-Since your module is awesome, other users will want to play with it. Let them know what the ground rules for contributing are.
-
-## Release Notes/Contributors/Etc. **Optional**
-
-If you aren't using changelog, put your release notes here (though you should consider using changelog). You can also add any additional sections you feel are necessary or important to include here. Please use the `## ` header. 
