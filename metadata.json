@@ -1,6 +1,6 @@
 {
   "name": "martyewings-agent_service_controller_tasks",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "martynewings",
   "summary": "Contains Tasks Which allow the user to enable/disable  the puppet agent service",
   "license": "Apache-2.0",
