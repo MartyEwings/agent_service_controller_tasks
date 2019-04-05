@@ -74,3 +74,20 @@ EOM
   end
 end
 
+desc 'Syntax check shellscripts'
+task :shellcheck do
+  Dir['{tasks,files}/**/*.sh'].each do |shell_file|
+    sh "shellcheck #{shell_file}" do |ok, res|
+        exit res.exitstatus unless ok
+    end
+  end
+end
+
+desc 'Check task names'
+ task :tasknames do
+   errors = Dir['tasks/**/*'].map do |task|
+       "Task name \"#{task}\" is invalid" if File.basename(task) !~ /\A[a-z][a-z0-9_]*\.[a-z0-9_]+\Z/
+   end.compact
+   abort errors.join("\n") if errors.any?
+end
+
