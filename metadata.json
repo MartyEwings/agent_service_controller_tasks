@@ -1,7 +1,7 @@
 {
   "name": "martyewings-agent_service_controller_tasks",
-  "version": "0.1.1",
-  "author": "martynewings",
+  "version": "1.0.0",
+  "author": "martyewings",
   "summary": "Contains Tasks Which allow the user to enable/disable  the puppet agent service",
   "license": "Apache-2.0",
   "source": "https://github.com/MartyEwings/agent_service_controller_tasks.git",
@@ -50,6 +50,7 @@
       "operatingsystemrelease": [
         "2008 R2",
         "2012 R2",
+	"2016",
         "10"
       ]
     },
@@ -63,10 +64,10 @@
   "requirements": [
     {
       "name": "puppet",
-      "version_requirement": ">= 4.7.0 < 6.0.0"
+      "version_requirement": ">= 4.7.0 < 7.0.0"
     }
   ],
-  "pdk-version": "1.2.0",
-  "template-url": "file:///opt/puppetlabs/pdk/share/cache/pdk-module-template.git",
-  "template-ref": "heads/master-0-g3f7d5ce"
+  "pdk-version": "1.10.0",
+  "template-url": "file:///opt/puppetlabs/pdk/share/cache/pdk-templates.git",
+  "template-ref": "1.10.0-0-gbba9ac3"
 }

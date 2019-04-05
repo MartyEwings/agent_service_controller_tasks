@@ -7,4 +7,4 @@ Param(
   )
 # Puppet Task Name: disable_agent_windows
 #
-puppet agent --disable $reason
+C:\"Program Files"\"Puppet Labs"\Puppet\bin\puppet agent --disable $reason
