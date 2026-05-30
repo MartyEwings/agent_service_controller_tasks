@@ -1,11 +1,6 @@
 {
+  "private": true,
   "puppet_task_version": 1,
   "supports_noop": false,
-  "description": "Disables the puppet agent service in bash OS's",
-  "parameters": {
-  "reason": {
-         "description": "A quick note as to the reason the service was disabled",
-         "type": "String"
-}  
-}
+  "description": "Shell implementation of the disable_agent task. Not intended to be run directly; use disable_agent."
 }

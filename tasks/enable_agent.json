@@ -1,0 +1,21 @@
+{
+  "puppet_task_version": 1,
+  "supports_noop": false,
+  "description": "Re-enables the Puppet agent service. The correct implementation (shell or PowerShell) is selected automatically based on the target's platform.",
+  "parameters": {
+  },
+  "implementations": [
+    {
+      "name": "enable_agent_bash.sh",
+      "requirements": [
+        "shell"
+      ]
+    },
+    {
+      "name": "enable_agent_windows.ps1",
+      "requirements": [
+        "powershell"
+      ]
+    }
+  ]
+}

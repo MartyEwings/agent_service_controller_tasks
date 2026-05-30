@@ -25,10 +25,14 @@ Installing this module populates the tasks available in the Puppet Enterprise co
 
 ## Usage
 
-For Windows nodes select the `windows` version of the tasks; for Linux and macOS select the `bash` version.
+There is a single task for each action — `disable_agent` and `enable_agent`.
+Each task ships both a shell and a PowerShell implementation, and Puppet/Bolt
+automatically selects the correct one based on the target's platform (the
+`shell` feature for \*nix/macOS, the `powershell` feature for Windows). You no
+longer need to pick a platform-specific task by hand.
 
-* `disable` accepts a `reason` string describing why the service was disabled.
-* `enable` re-enables the service.
+* `disable_agent` accepts a `reason` string describing why the service was disabled.
+* `enable_agent` re-enables the service.
 
 The tasks call the agent's all-in-one (AIO) `puppet` binary at its standard
 location (`/opt/puppetlabs/bin/puppet` on \*nix/macOS,
@@ -37,34 +41,33 @@ to `puppet` on `PATH` for non-standard installs.
 
 ### Examples
 
-Run from the PE console, or with Bolt:
+Run from the PE console, or with Bolt. The same task works against a mix of
+Linux, macOS and Windows targets:
 
 ```bash
-# Disable the agent on Linux/macOS targets
-bolt task run agent_service_controller_tasks::disable_agent_bash \
-  reason='Maintenance window CHG0012345' --targets linux_nodes
+# Disable the agent (any supported platform)
+bolt task run agent_service_controller_tasks::disable_agent \
+  reason='Maintenance window CHG0012345' --targets all_nodes
 
-# Re-enable the agent on Linux/macOS targets
-bolt task run agent_service_controller_tasks::enable_agent_bash --targets linux_nodes
-
-# Disable the agent on Windows targets
-bolt task run agent_service_controller_tasks::disable_agent_windows \
-  reason='Maintenance window CHG0012345' --targets windows_nodes
-
-# Re-enable the agent on Windows targets
-bolt task run agent_service_controller_tasks::enable_agent_windows --targets windows_nodes
+# Re-enable the agent (any supported platform)
+bolt task run agent_service_controller_tasks::enable_agent --targets all_nodes
 ```
 
 ## Reference
 
 This module ships the following tasks:
 
-| Task                                | Platform         | Parameters | Description                                  |
-| ----------------------------------- | ---------------- | ---------- | -------------------------------------------- |
-| `disable_agent_bash`                | \*nix / macOS    | `reason` (String) | Disables the Puppet agent service        |
-| `enable_agent_bash`                 | \*nix / macOS    | _none_     | Re-enables the Puppet agent service          |
-| `disable_agent_windows`             | Windows          | `reason` (String) | Disables the Puppet agent service        |
-| `enable_agent_windows`              | Windows          | _none_     | Re-enables the Puppet agent service          |
+| Task            | Parameters        | Description                          |
+| --------------- | ----------------- | ------------------------------------ |
+| `disable_agent` | `reason` (String) | Disables the Puppet agent service    |
+| `enable_agent`  | _none_            | Re-enables the Puppet agent service  |
+
+Each task automatically selects the correct implementation per platform:
+
+| Implementation (private) | Selected when target has feature |
+| ------------------------ | -------------------------------- |
+| `*_bash.sh`              | `shell` (\*nix / macOS)          |
+| `*_windows.ps1`          | `powershell` (Windows)           |
 
 ## Limitations
 
