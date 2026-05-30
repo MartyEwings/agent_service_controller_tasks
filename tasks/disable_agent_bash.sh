@@ -12,4 +12,6 @@ if [ ! -x "${puppet_bin}" ]; then
   puppet_bin="$(command -v puppet)"
 fi
 
+# PT_reason is supplied by Bolt as an environment variable at runtime.
+# shellcheck disable=SC2154
 "${puppet_bin}" agent --disable "${PT_reason}"

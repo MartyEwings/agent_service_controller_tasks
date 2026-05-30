@@ -9,9 +9,17 @@ on:
       - main
   workflow_dispatch:
 
+# Cancel superseded runs on the same ref (e.g. rapid PR pushes).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   validate:
-    name: Validate and test
+    name: PDK validate (lint, rubocop, metadata, tasks)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,8 +36,70 @@ jobs:
       - name: Install module dependencies
         run: pdk bundle install
 
-      - name: Validate
-        run: pdk validate --format text
+      - name: Validate (puppet, ruby, metadata, tasks)
+        run: pdk validate --format text --parallel
+
+  unit:
+    name: Unit tests (Puppet ${{ matrix.puppet_version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Module supports puppet >= 7.24.0 < 9.0.0 (see metadata.json)
+          - puppet_version: '7'
+            puppet_gem_version: '~> 7.24'
+          - puppet_version: '8'
+            puppet_gem_version: '~> 8.0'
+    env:
+      PUPPET_GEM_VERSION: ${{ matrix.puppet_gem_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+
+      - name: Install PDK
+        run: gem install pdk
+
+      - name: Install module dependencies
+        run: pdk bundle install
 
       - name: Unit tests
         run: pdk test unit
+
+  shellcheck:
+    name: ShellCheck (bash task implementations)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: ./tasks
+          additional_files: '*.sh'
+
+  powershell:
+    name: PSScriptAnalyzer (PowerShell task implementations)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+          $results = Invoke-ScriptAnalyzer -Path ./tasks -Recurse -Severity Warning,Error
+          if ($results) {
+            $results | Format-Table -AutoSize | Out-String | Write-Host
+            Write-Error "PSScriptAnalyzer found $($results.Count) issue(s)."
+            exit 1
+          }
+          Write-Host "PSScriptAnalyzer found no issues."
