@@ -84,3 +84,8 @@ This module is maintained with the [Puppet Development Kit (PDK)](https://www.pu
 pdk validate   # lint and syntax checks
 pdk test unit  # run unit tests
 ```
+
+Unit tests live in `spec/tasks/` and validate the task metadata structure
+(the cross-platform `implementations` wiring, parameters, and that the
+implementation scripts exist). End-to-end execution against real targets is
+out of scope for unit tests and requires acceptance testing.
