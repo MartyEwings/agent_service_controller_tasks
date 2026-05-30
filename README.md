@@ -17,11 +17,34 @@ This module provides Puppet tasks for controlling the Puppet agent service on Wi
 
 The tasks allow you to disable the agent (recording a comment explaining why) and to re-enable it again at a later date.
 
+The tasks work with both **Puppet Enterprise** (run them from the PE console or
+orchestrator) and **open-source Puppet / Puppet core** (run them with
+[Bolt](https://www.puppet.com/docs/bolt/latest/bolt.html) via `bolt task run`).
+The only requirement is a Puppet all-in-one (AIO) agent on the target.
+
+### Use cases
+
+Temporarily pausing the agent is useful whenever you need Puppet to stop
+enforcing state for a window of time, for example:
+
+* **Maintenance windows** — disable the agent across a set of nodes before
+  patching, upgrades or hardware work, then re-enable it once the change is
+  complete. Pass the change reference (e.g. a change ticket number) as the
+  `reason` so it is recorded in the agent's lock file.
+* **Incident response / troubleshooting** — stop Puppet reverting manual
+  changes while you investigate an issue, then re-enable to resume enforcement.
+* **Staged rollouts** — hold the agent on a subset of nodes while validating a
+  change elsewhere.
+
+Because the disable reason is stored on the node, anyone running `puppet agent`
+manually sees why it was disabled, and `enable_agent` cleanly reverses it.
+
 ## Setup
 
 ### Beginning with agent_service_controller_tasks
 
-Installing this module populates the tasks available in the Puppet Enterprise console (or runnable via `bolt task run`).
+Installing this module makes the tasks available in the Puppet Enterprise
+console and orchestrator, and to Bolt (`bolt task show`, `bolt task run`).
 
 ## Usage
 
@@ -71,10 +94,11 @@ Each task automatically selects the correct implementation per platform:
 
 ## Limitations
 
-Requires a Puppet all-in-one (AIO) agent install. Supports Puppet 7 and 8 (Puppet
-Enterprise 2021.x through 2025.x). See `metadata.json` for the full list of
-supported operating systems. The bash tasks require a `bash` shell; the Windows
-tasks require PowerShell.
+Requires a Puppet all-in-one (AIO) agent install. Supports Puppet 7 and 8,
+covering both Puppet Enterprise (2021.x through 2025.x) and the matching
+open-source Puppet releases run via Bolt. See `metadata.json` for the full list
+of supported operating systems. The bash tasks require a `bash` shell; the
+Windows tasks require PowerShell.
 
 ## Development
 
