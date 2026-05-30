@@ -1,14 +1,10 @@
 
 # agent_service_controller_tasks
 
-
-
 #### Table of Contents
 
 1. [Description](#description)
 2. [Setup - The basics of getting started with agent_service_controller_tasks](#setup)
-    * [What agent_service_controller_tasks affects](#what-agent_service_controller_tasks-affects)
-    * [Setup requirements](#setup-requirements)
     * [Beginning with agent_service_controller_tasks](#beginning-with-agent_service_controller_tasks)
 3. [Usage - Configuration options and additional functionality](#usage)
 4. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
@@ -17,41 +13,71 @@
 
 ## Description
 
-This Module Provides Tasks for controlling the puppet agent service on Windows and Linux
+This module provides Puppet tasks for controlling the Puppet agent service on Windows, Linux and macOS.
 
-
-The Tasks allow you to disable the service, with a comment, and to enable it again at a later date
+The tasks allow you to disable the agent (recording a comment explaining why) and to re-enable it again at a later date.
 
 ## Setup
 
-## Beginning with agent_service_controller_tasks
+### Beginning with agent_service_controller_tasks
 
-Installing this module will populate the tasks available in the PE Console
+Installing this module populates the tasks available in the Puppet Enterprise console (or runnable via `bolt task run`).
 
 ## Usage
 
-For Windows node select the windows version of the tasks, for Linux select bash.
+For Windows nodes select the `windows` version of the tasks; for Linux and macOS select the `bash` version.
 
-disable will accept a description string as to why the service was disabled
-enable will reenable the service
+* `disable` accepts a `reason` string describing why the service was disabled.
+* `enable` re-enables the service.
 
-These tasks produce no output
+The tasks call the agent's all-in-one (AIO) `puppet` binary at its standard
+location (`/opt/puppetlabs/bin/puppet` on \*nix/macOS,
+`C:\Program Files\Puppet Labs\Puppet\bin\puppet.bat` on Windows), falling back
+to `puppet` on `PATH` for non-standard installs.
+
+### Examples
+
+Run from the PE console, or with Bolt:
+
+```bash
+# Disable the agent on Linux/macOS targets
+bolt task run agent_service_controller_tasks::disable_agent_bash \
+  reason='Maintenance window CHG0012345' --targets linux_nodes
+
+# Re-enable the agent on Linux/macOS targets
+bolt task run agent_service_controller_tasks::enable_agent_bash --targets linux_nodes
+
+# Disable the agent on Windows targets
+bolt task run agent_service_controller_tasks::disable_agent_windows \
+  reason='Maintenance window CHG0012345' --targets windows_nodes
+
+# Re-enable the agent on Windows targets
+bolt task run agent_service_controller_tasks::enable_agent_windows --targets windows_nodes
+```
 
 ## Reference
 
-Users need a complete list of your module's classes, types, defined types providers, facts, and functions, along with the parameters for each. You can provide this list either via Puppet Strings code comments or as a complete list in the README Reference section.
+This module ships the following tasks:
 
-* If you are using Puppet Strings code comments, this Reference section should include Strings information so that your users know how to access your documentation.
-
-* If you are not using Puppet Strings, include a list of all of your classes, defined types, and so on, along with their parameters. Each element in this listing should include:
-
-  * The data type, if applicable.
-  * A description of what the element does.
-  * Valid values, if the data type doesn't make it obvious.
-  * Default value, if any.
+| Task                                | Platform         | Parameters | Description                                  |
+| ----------------------------------- | ---------------- | ---------- | -------------------------------------------- |
+| `disable_agent_bash`                | \*nix / macOS    | `reason` (String) | Disables the Puppet agent service        |
+| `enable_agent_bash`                 | \*nix / macOS    | _none_     | Re-enables the Puppet agent service          |
+| `disable_agent_windows`             | Windows          | `reason` (String) | Disables the Puppet agent service        |
+| `enable_agent_windows`              | Windows          | _none_     | Re-enables the Puppet agent service          |
 
 ## Limitations
 
-Limited to OS's with a bash shell or powershell available
+Requires a Puppet all-in-one (AIO) agent install. Supports Puppet 7 and 8 (Puppet
+Enterprise 2021.x through 2025.x). See `metadata.json` for the full list of
+supported operating systems. The bash tasks require a `bash` shell; the Windows
+tasks require PowerShell.
 
 ## Development
+
+This module is maintained with the [Puppet Development Kit (PDK)](https://www.puppet.com/docs/pdk/latest/pdk.html).
+
+```bash
+pdk validate   # lint and syntax checks
+pdk test unit  # run unit tests
+```

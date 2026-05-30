@@ -2,9 +2,18 @@
 
 [CmdletBinding()]
 Param(
- [String]
+  [String]
   $reason
-  )
+)
 # Puppet Task Name: disable_agent_windows
 #
-C:\"Program Files"\"Puppet Labs"\Puppet\bin\puppet agent --disable $reason
+# Disables the Puppet agent on Windows AIO installations.
+$ErrorActionPreference = 'Stop'
+
+$puppetBin = Join-Path $env:ProgramFiles 'Puppet Labs\Puppet\bin\puppet.bat'
+if (-not (Test-Path $puppetBin)) {
+  $puppetBin = 'puppet'
+}
+
+& $puppetBin agent --disable $reason
+exit $LASTEXITCODE

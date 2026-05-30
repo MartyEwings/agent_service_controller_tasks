@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+
+      - name: Install PDK
+        run: gem install pdk
+
+      - name: Install module dependencies
+        run: pdk bundle install
+
+      - name: Validate
+        run: pdk validate --format text
+
+      - name: Unit tests
+        run: pdk test unit
