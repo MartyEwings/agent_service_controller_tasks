@@ -5,6 +5,8 @@
   "summary": "Contains Tasks Which allow the user to enable/disable the puppet agent service",
   "license": "Apache-2.0",
   "source": "https://github.com/MartyEwings/agent_service_controller_tasks.git",
+  "project_page": "https://github.com/MartyEwings/agent_service_controller_tasks",
+  "issues_url": "https://github.com/MartyEwings/agent_service_controller_tasks/issues",
   "dependencies": [
 
   ],
