@@ -6,15 +6,6 @@
 Rakefile:
   extras:
     - |
-       desc 'Syntax check shellscripts'
-       task :shellcheck do
-         Dir['{tasks,files}/**/*.sh'].each do |shell_file|
-           sh "shellcheck #{shell_file}" do |ok, res|
-               exit res.exitstatus unless ok
-           end
-         end
-       end
-    - |
        desc 'Check task names'
         task :tasknames do
           errors = Dir['tasks/**/*'].map do |task|

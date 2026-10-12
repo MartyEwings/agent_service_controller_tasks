@@ -49,18 +49,27 @@ console and orchestrator, and to Bolt (`bolt task show`, `bolt task run`).
 ## Usage
 
 There is a single task for each action — `disable_agent` and `enable_agent`.
-Each task ships both a shell and a PowerShell implementation, and Puppet/Bolt
-automatically selects the correct one based on the target's platform (the
-`shell` feature for \*nix/macOS, the `powershell` feature for Windows). You no
-longer need to pick a platform-specific task by hand.
+Each task is a single native Ruby implementation that runs on the Ruby bundled
+with the Puppet agent, so the same task runs on \*nix, macOS and Windows with no
+platform-specific variants.
 
 * `disable_agent` accepts a `reason` string describing why the service was disabled.
 * `enable_agent` re-enables the service.
 
-The tasks call the agent's all-in-one (AIO) `puppet` binary at its standard
-location (`/opt/puppetlabs/bin/puppet` on \*nix/macOS,
-`C:\Program Files\Puppet Labs\Puppet\bin\puppet.bat` on Windows), falling back
-to `puppet` on `PATH` for non-standard installs.
+Rather than shelling out to `puppet agent --disable/--enable`, the tasks call
+Puppet's public lockfile API (`Puppet::Agent::Disabler`) directly, which manages
+the same `agent_disabled_lockfile` that the `puppet agent` command uses. Both
+tasks are idempotent and return structured JSON, for example:
+
+```json
+{"status": "disabled", "disabled": true, "reason": "Maintenance window CHG0012345"}
+{"status": "already disabled", "disabled": true, "reason": "Earlier reason"}
+{"status": "enabled", "disabled": false, "previous_reason": "Maintenance window CHG0012345"}
+{"status": "already enabled", "disabled": false}
+```
+
+If the agent is already disabled, `disable_agent` leaves the existing lock and
+reason in place (matching `puppet agent --disable` behaviour) and reports it.
 
 ### Examples
 
@@ -85,20 +94,31 @@ This module ships the following tasks:
 | `disable_agent` | `reason` (String) | Disables the Puppet agent service    |
 | `enable_agent`  | _none_            | Re-enables the Puppet agent service  |
 
-Each task automatically selects the correct implementation per platform:
-
-| Implementation (private) | Selected when target has feature |
-| ------------------------ | -------------------------------- |
-| `*_bash.sh`              | `shell` (\*nix / macOS)          |
-| `*_windows.ps1`          | `powershell` (Windows)           |
+Both tasks read their parameters as JSON on stdin and are implemented in
+`tasks/<name>.rb` with the shebang `#!/opt/puppetlabs/puppet/bin/ruby`.
 
 ## Limitations
 
-Requires a Puppet all-in-one (AIO) agent install. Supports Puppet 7 and 8,
-covering both Puppet Enterprise (2021.x through 2025.x) and the matching
-open-source Puppet releases run via Bolt. See `metadata.json` for the full list
-of supported operating systems. The bash tasks require a `bash` shell; the
-Windows tasks require PowerShell.
+Requires a Puppet all-in-one (AIO) agent on the target, since the tasks run on
+the agent's bundled Ruby and load Puppet's own libraries. Supports Puppet 8
+(Ruby 3.2) and Puppet 9, covering Puppet Enterprise 2025.x and later and the
+matching Puppet core releases run via Bolt. Puppet 7 is no longer supported;
+use release 2.0.0 of this module for Puppet 7 agents. See `metadata.json` for
+the full list of supported operating systems.
+
+When running the tasks with Bolt over WinRM, Bolt runs `.rb` tasks with the
+`ruby` on the target's `PATH`. If the Puppet agent's Ruby is not on `PATH`, point
+Bolt at it in your inventory or `bolt-defaults.yaml`:
+
+```yaml
+config:
+  winrm:
+    interpreters:
+      .rb: 'C:\Program Files\Puppet Labs\Puppet\puppet\bin\ruby.exe'
+```
+
+PE orchestrator runs Ruby tasks with the agent's Ruby on all platforms, so no
+extra configuration is needed there.
 
 ## Development
 
@@ -109,7 +129,13 @@ pdk validate   # lint and syntax checks
 pdk test unit  # run unit tests
 ```
 
-Unit tests live in `spec/tasks/` and validate the task metadata structure
-(the cross-platform `implementations` wiring, parameters, and that the
-implementation scripts exist). End-to-end execution against real targets is
-out of scope for unit tests and requires acceptance testing.
+Unit tests live in `spec/tasks/`. They validate the task metadata and exercise
+the Ruby task logic against a temporary agent lockfile. End-to-end execution
+against real targets is out of scope for unit tests and requires acceptance
+testing.
+
+Puppet 8.11+ and Puppet 9 gems are published to the authenticated puppetcore gem
+source. Set `PUPPET_FORGE_TOKEN` (or run
+`bundle config set gemsource.public true` to use the last public Puppet 8 gem)
+before running the tests locally. In CI, add the token as the
+`PUPPET_FORGE_TOKEN` repository secret.

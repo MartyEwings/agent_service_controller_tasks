@@ -17,9 +17,16 @@ concurrency:
 permissions:
   contents: read
 
+# Puppet 8.11+ and Puppet 9 gems are only published to the authenticated
+# puppetcore gem source. Store a Forge API key as the PUPPET_FORGE_TOKEN
+# repository secret. Without it (e.g. PRs from forks) jobs fall back to the
+# last public Puppet 8 gem and the Puppet 9 job is skipped.
+env:
+  BUNDLE_RUBYGEMS___PUPPETCORE__PUPPET__COM: ${{ secrets.PUPPET_FORGE_TOKEN && format('forge-key:{0}', secrets.PUPPET_FORGE_TOKEN) || '' }}
+
 jobs:
   validate:
-    name: PDK validate (lint, rubocop, metadata, tasks)
+    name: PDK validate (metadata, tasks, rubocop)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -33,73 +40,61 @@ jobs:
       - name: Install PDK
         run: gem install pdk
 
+      - name: Use public gems when puppetcore credentials are unavailable
+        if: env.BUNDLE_RUBYGEMS___PUPPETCORE__PUPPET__COM == ''
+        run: |
+          pdk bundle config set --local gemsource.public true
+          echo "PUPPET_GEM_VERSION=8.10.0" >> "$GITHUB_ENV"
+
       - name: Install module dependencies
         run: pdk bundle install
 
-      - name: Validate (puppet, ruby, metadata, tasks)
+      - name: Validate (ruby, metadata, tasks)
         run: pdk validate --format text --parallel
 
   unit:
-    name: Unit tests (Puppet ${{ matrix.puppet_version }})
+    name: Unit tests (Puppet ${{ matrix.puppet_version }}, Ruby ${{ matrix.ruby_version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        # Module supports puppet >= 8.0.0 < 10.0.0 (see metadata.json). Ruby
+        # versions match those bundled with the corresponding puppet-agent.
         include:
-          # Module supports puppet >= 7.24.0 < 9.0.0 (see metadata.json)
-          - puppet_version: '7'
-            puppet_gem_version: '~> 7.24'
           - puppet_version: '8'
             puppet_gem_version: '~> 8.0'
+            ruby_version: '3.2'
+          - puppet_version: '9'
+            puppet_gem_version: '~> 9.0'
+            ruby_version: '4.0'
     env:
       PUPPET_GEM_VERSION: ${{ matrix.puppet_gem_version }}
     steps:
       - name: Checkout
+        if: matrix.puppet_version != '9' || env.BUNDLE_RUBYGEMS___PUPPETCORE__PUPPET__COM != ''
         uses: actions/checkout@v4
 
       - name: Set up Ruby
+        if: matrix.puppet_version != '9' || env.BUNDLE_RUBYGEMS___PUPPETCORE__PUPPET__COM != ''
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'
+          ruby-version: ${{ matrix.ruby_version }}
+          bundler-cache: false
 
-      - name: Install PDK
-        run: gem install pdk
+      - name: Use public gems when puppetcore credentials are unavailable
+        if: matrix.puppet_version == '8' && env.BUNDLE_RUBYGEMS___PUPPETCORE__PUPPET__COM == ''
+        run: |
+          bundle config set --local gemsource.public true
+          echo "PUPPET_GEM_VERSION=8.10.0" >> "$GITHUB_ENV"
 
       - name: Install module dependencies
-        run: pdk bundle install
+        if: matrix.puppet_version != '9' || env.BUNDLE_RUBYGEMS___PUPPETCORE__PUPPET__COM != ''
+        run: bundle install --jobs 4 --retry 3
 
       - name: Unit tests
-        run: pdk test unit
+        if: matrix.puppet_version != '9' || env.BUNDLE_RUBYGEMS___PUPPETCORE__PUPPET__COM != ''
+        run: bundle exec rake spec
 
-  shellcheck:
-    name: ShellCheck (bash task implementations)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@master
-        with:
-          scandir: ./tasks
-          additional_files: '*.sh'
-
-  powershell:
-    name: PSScriptAnalyzer (PowerShell task implementations)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Run PSScriptAnalyzer
-        shell: pwsh
-        run: |
-          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
-          $results = Invoke-ScriptAnalyzer -Path ./tasks -Recurse -Severity Warning,Error
-          if ($results) {
-            $results | Format-Table -AutoSize | Out-String | Write-Host
-            Write-Error "PSScriptAnalyzer found $($results.Count) issue(s)."
-            exit 1
-          }
-          Write-Host "PSScriptAnalyzer found no issues."
+      - name: Skipped (no puppetcore credentials)
+        if: matrix.puppet_version == '9' && env.BUNDLE_RUBYGEMS___PUPPETCORE__PUPPET__COM == ''
+        run: echo "::warning::Puppet 9 unit tests skipped - set the PUPPET_FORGE_TOKEN secret to enable them."
