@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 
 
+## Release 3.0.0
+
+**Features**
+
+Updated to PDK 4.0.1 (pdk-default template 4.0.1, puppetcore gem source support)
+Added support for Puppet 9; supported Puppet range is now `>= 8.0.0 < 10.0.0`
+Replaced the separate shell and PowerShell implementations with a single native Ruby implementation per task, running on the Puppet agent's bundled Ruby on every platform
+Tasks now use Puppet's `Puppet::Agent::Disabler` API directly instead of shelling out to the `puppet` binary
+Tasks are idempotent and return structured JSON (`status`, `disabled`, `reason` / `previous_reason`)
+CI tests against Puppet 8 (Ruby 3.2) and Puppet 9 (Ruby 4.0)
+
+**Backwards-incompatible changes**
+
+Dropped support for Puppet 7 (end of life). Use release 2.0.0 for Puppet 7 agents.
+The private `disable_agent_bash`, `disable_agent_windows`, `enable_agent_bash` and `enable_agent_windows` implementation tasks have been removed. The public `disable_agent` and `enable_agent` task names are unchanged.
+Bolt over WinRM may need the `.rb` interpreter pointed at the Puppet agent's Ruby (see README).
+
+**Known Issues**
+
+None
+
+
 ## Release 2.0.0
 
 **Features**

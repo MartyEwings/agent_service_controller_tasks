@@ -1,6 +1,0 @@
-{
-  "private": true,
-  "puppet_task_version": 1,
-  "supports_noop": false,
-  "description": "Shell implementation of the disable_agent task. Not intended to be run directly; use disable_agent."
-}
