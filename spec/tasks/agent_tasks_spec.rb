@@ -8,6 +8,14 @@ require_relative '../../tasks/enable_agent'
 # Exercises the task logic against a temporary agent_disabled_lockfile, the
 # same file `puppet agent --disable/--enable` manages on a real node.
 RSpec.describe 'agent service controller tasks' do
+  # rspec-puppet stubs Puppet.features.root? to true and leaves global defaults
+  # uninitialised, so letting the tasks initialise settings for real would load
+  # the host's puppet.conf and try to create root-owned dirs (/var/log/puppetlabs).
+  before(:each) do
+    allow(Puppet.settings).to receive(:preferred_run_mode=)
+    allow(Puppet).to receive(:initialize_settings)
+  end
+
   around(:each) do |example|
     Dir.mktmpdir do |dir|
       Puppet[:agent_disabled_lockfile] = File.join(dir, 'agent_disabled.lock')
